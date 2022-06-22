@@ -1,3 +1,2 @@
-echo "Enter message for commit: "
-tee | xargs -I {} git commit -am "{}" > /dev/null
+git commit -am "regular backup"
 git push
