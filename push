@@ -1,2 +1,3 @@
-git commit -am "regular backup"
+echo "Enter message for commit: "
+tee | xargs -I {} git commit -am "{}"
 git push
