@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta http-equiv='Content-Type' content='text/html' charset='utf-8'/>
+	<title>Level Creator</title>
+	<link rel='stylesheet' type='text/css' href='style.css'>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js" integrity="sha512-WIklPM6qPCIp6d3fSSr90j+1unQHUOoWDS4sdTiR8gxUTnyZ8S2Mr8e10sKKJ/bhJgpAa/qG068RDkg6fIlNFA==" crossorigin="anonymous"></script>
+</head>
+<body>
+	<input placeholder='JSON level data' id='input'>
+	<button onclick='importLevelData()'>Import Level Data</button>
+	<p id='wall-counter'>0</p>
+	<p id='output'></p>
+	<div id='game-container' onmouseover='this.mouseIsOver = true' onmouseout='this.mouseIsOver = false'></div>
+	<input placeholder='type' id='wallType'>
+	<input placeholder='id' id='wallId'>
+	<input type='checkbox' id='wallGrid' name='wallGrid'>
+	<label for='wallGrid'>Use Grid</label>
+	<input type='checkbox' id='wallDelete' name='wallDelete'>
+	<label for='wallDelete'>Delete Mode</label>
+	<input type='checkbox' id='touchMode' name='touchMpde'>
+	<label for='touchMode'>Touch Mode</label>
+	<button onclick='outputLevel()'>Output JSON Level Data</button>
+	<br>
+	<input placeholder='x' id='startPosX'>
+	<input placeholder='y' id='startPosY'>
+	<button onclick='setStartPos()'>Set Start Pos</button>
+	<br>
+	<input placeholder='Type Memo' id='memo'>
+	<button onclick='setMemo()'>Set Level Memo</button>
+	<br>
+	<button onclick='setButtonColors()'>Set Button Colors</button>
+	<button onclick='addButtonColor()'>Add Color</button>
+	<input placeholder='Color ID' id='rm-color-id'>
+	<button onclick='removeButtonColor()'>Remove Color</button>
+	<script src='editor.js'></script>
+	<!-- initialize button colors -->
+	<script>
+		levelData.buttonColors.forEach(function(color, index) {
+			document.body.insertAdjacentHTML('beforeend', `<div id='rgb${index}'><input placeholder='Red Value ${index}' id='rgb-r${index}' value='${color[0]}'><input placeholder='Green Value ${index}' id='rgb-g${index}' value='${color[1]}'><input placeholder='Blue Value ${index}' id='rgb-b${index}' value='${color[2]}'><div id='rgb-sample${index}' style='width:20px;height:20px;background-color:rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.5);'></div></div>`);
+			buttonColorsHTML.push(document.getElementById('rgb' + index));
+		});
+	</script>
+</body>
+</html>
+

@@ -1,0 +1,14 @@
+#output {
+	width:100%;
+	background-color: #A0A0A0;
+	font-family: monospace;
+	text-align:center;
+}
+#game-container {
+	display: flex;
+	justify-content: center;
+}
+input {
+	height: 20px;
+	width: 150px;
+}

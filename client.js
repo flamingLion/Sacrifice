@@ -1,0 +1,222 @@
+console.log('Do not paste anything here unless you know what you are doing! You may be giving hackers access to your data!');
+
+let Levels,
+	prevPlayerCount = 0,
+	player = {
+		level: 0,
+		name: 'Unknown',
+		element: undefined,
+		uid: -1,
+		w: 2,
+		h: 2,
+		x: 0,
+		y: 0
+	},
+	inputs = {
+		left: 0,
+		right: 0,
+		up: 0,
+		down: 0
+	};
+
+// get levels and start game
+let xhttp = new XMLHttpRequest();
+xhttp.open('GET', 'levels.json', true);
+xhttp.onreadystatechange = function() {
+	if (xhttp.readyState == 4) {
+		Levels = JSON.parse(xhttp.response).Levels;
+		console.log('Received levels, starting game...');
+		Game();
+	}
+};
+console.log('Requesting levels');
+xhttp.send();
+
+const ws = new WebSocket('ws://52.2.197.118:25565');
+
+ws.onclose = function() {
+	alert('WebSocket connection closed, this could be due to an error connecting to the server, or the server being down. Refresh the page to retry.');
+};
+
+ws.onmessage = function(message) {
+	var data = message.data.split('|');
+	switch (data[0]) {
+// 0: player update, 1: wall update, 2: button state update
+		case '0':
+			player.level = data[1];
+			player.uid = data[2];
+			player.name = data[3];
+			player.state = data[4];
+			player.w = parseInt(data[5]);
+			player.h = parseInt(data[6]);
+			player.x = parseInt(data[7]);
+			player.y = parseInt(data[8]);
+			var players = [];
+			for (var i=9;i<data.length;i+=7) {
+				players.push({
+					uid: data[i],
+					name: data[i+1],
+					element: undefined,
+					state: parseInt(data[i+2]),
+					w: parseInt(data[i+3]),
+					h: parseInt(data[i+4]),
+					x: parseInt(data[i+5]),
+					y: parseInt(data[i+6])
+				});
+			}
+			Levels[player.level].players = players;
+			break;
+		case '1':
+			Levels[player.level].walls[data[1]][data[2]] = data[3];
+			break;
+		case '2':
+			Levels[player.level].walls.forEach(function(wall) {
+				if (wall[5] == data[1]) {
+					wall[6] = data[2];
+				}
+			});
+	}
+};
+
+const buttonColors = ['#FF4040', '#FFFF40', '#4040FF', '#FF04FF'];
+
+let Game = function() {
+	let memo = document.getElementById('memo'),
+		gameContainer = document.getElementById('game-container'),
+		levelContainer = document.getElementById('level-container');
+
+	// send inputs to server
+	document.onkeydown = function(e) {
+		if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+			e.preventDefault();
+		}
+		switch (e.key) {
+			case ' ':
+			case 'w':
+			case 'ArrowUp':
+				inputs.up=1;
+				break;
+			case 's':
+			case 'ArrowDown':
+				inputs.down=1;
+				break;
+			case 'a':
+			case 'ArrowLeft':
+				inputs.left=1;
+				break;
+			case 'd':
+			case 'ArrowRight':
+				inputs.right=1;
+				break;
+		}
+		ws.send('' + inputs.up + inputs.down + inputs.left + inputs.right);
+	};
+	document.onkeyup = function(e) {
+		switch (e.key) {
+			case ' ':
+			case 'w':
+			case 'ArrowUp':
+				inputs.up=0;
+				break;
+			case 's':
+			case 'ArrowDown':
+				inputs.down=0;
+				break;
+			case 'a':
+			case 'ArrowLeft':
+				inputs.left=0;
+				break;
+			case 'd':
+			case 'ArrowRight':
+				inputs.right=0;
+				break;
+		}
+		ws.send('' + inputs.up + inputs.down + inputs.left + inputs.right);
+	};
+
+	let currLevel = -1;
+	// creates div for given wall 
+	function createWall(wall, color, index) {
+		levelContainer.insertAdjacentHTML('beforeend', `<div id=wall` + index + ` style='position:absolute;background-color: ` + color + `;width: ` + (wall[3]-wall[1]) + `px;height: ` + (wall[4]-wall[2]) + `px;left: ` + wall[1] + `px;top:` + wall[2] + `px;'></div>`);
+	}
+	function createPlayer(plr) {
+		levelContainer.insertAdjacentHTML('beforeend', `<div id=player` + plr.uid + ` style='position:absolute;background-color: #00FF00;border: 1px solid #000000;width: ` + (plr.w-1) + `px;height: ` + (plr.h-1) + `px;left: ` + plr.x + `px;top:` + plr.y + `px;'></div>`);
+	}
+	setInterval(function() {
+		// if level change detected, clear level and create new one
+		if (player.level != currLevel) {
+			currLevel = player.level;
+			gameContainer.removeChild(levelContainer);
+			gameContainer.insertAdjacentHTML('beforeend', `<div id='level-container'></div>`);
+			levelContainer = document.getElementById('level-container');
+			// draw players
+			Levels[player.level].players.forEach(function(plr) {
+				createPlayer(plr);
+			});
+			levelContainer.insertAdjacentHTML('beforeend', `<div id=player` + player.uid + ` style='position:absolute;background-color: #00FF00;border: 1px solid #000000;width: ` + (player.w-1) + `px;height: ` + (player.h-1) + `px;left: ` + player.x + `px;top:` + player.y + `px;'></div>`);
+			player.element = document.getElementById('player' + player.uid);
+			// draw memo
+			memo.firstChild.nodeValue = Levels[player.level].memo;
+			// draw walls
+			Levels[player.level].walls.forEach(function(wall, i) {
+				switch (wall[0]) {
+					case 0:
+						createWall(wall, '#000000', i);
+						break;
+					case 1:
+						createWall(wall, '#40FF40', i);
+						document.getElementById('wall' + i).style.opacity = 0.75;
+						break;
+					case 2:
+						createWall(wall, '#FF0000', i);
+						document.getElementById('wall' + i).style.opacity = 0.75;
+						break;
+					case 3:
+						createWall(wall, buttonColors[wall[5]], i)
+						break;
+					case 4:
+						createWall(wall, buttonColors[wall[5]], i);
+						document.getElementById('wall' + i).style.opacity = wall[6]==1?0.2:0.75;
+						break;
+					case 5:
+						createWall(wall, '#FF9000', 1);
+						break;
+					case 6:
+						createWall(wall, '#303030', i);
+						break;
+				}
+			});
+		}
+		// update walls
+		Levels[player.level].walls.forEach(function(wall, i) {
+			// update doors
+			if (wall[0] == 4) document.getElementById('wall'+i).style.opacity = wall[6]==1?0.2:0.75;
+		});
+		// detect if player left, if so, loop through first 50 player elements and delete ones without player objects
+		if (Levels[player.level].players.length < prevPlayerCount) {
+			for (let i = 0; i < 50; i++) {
+				if (document.getElementById('player'+i) != undefined && !Levels[player.level].players.find(function(plr) {return plr.uid==i})) {
+					levelContainer.removeChild(document.getElementById('player'+i));
+				}
+			}
+		}
+		prevPlayerCount = Levels[player.level].players.length;
+		// update players
+		Levels[player.level].players.forEach(function(plr) {
+			if (document.getElementById('player'+plr.uid) == undefined) createPlayer(plr);
+			document.getElementById('player'+plr.uid).style.left = plr.x + 'px';
+			document.getElementById('player'+plr.uid).style.top = plr.y + 'px';
+			document.getElementById('player'+plr.uid).style.width = (plr.w-1) + 'px';
+			document.getElementById('player'+plr.uid).style.height = (plr.h-1) + 'px';
+		});
+		if (document.getElementById('player'+player.uid) == undefined) {
+			levelContainer.insertAdjacentHTML('beforeend', `<div id=player` + player.uid + ` style='position:absolute;background-color: #00FF00;border: 1px solid #000000;width: ` + (player.w-1) + `px;height: ` + (player.h-1) + `px;left: ` + player.x + `px;top:` + player.y + `px;'></div>`);
+			player.element = document.getElementById('player' + player.uid);
+		}
+		player.element.id = 'player' + player.uid;
+		player.element.style.left = player.x + 'px';
+		player.element.style.top = player.y + 'px';
+		player.element.style.width = (player.w-1) + 'px';
+		player.element.style.height = (player.h-1) + 'px';
+	}, 1000/24);
+};

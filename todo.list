@@ -1,0 +1,11 @@
+make client use button colors from level file
+change editor to set button colors in hexadecimal
+make levels
+make new block types:
+        levers? - meh, might be fine in certain situations, buttons better
+        bounce pads? - wip
+        timed disapearing platforms
+        moving platforms
+        noclip platforms
+make sprites?
+fix fall state thing on line 108

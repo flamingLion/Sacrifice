@@ -1,0 +1,45 @@
+.info {
+	color: #FF4040;
+	font-family: sans-serif;
+	text-align: center;
+}
+#game-container {
+	display: flex;
+	justify-content: center;
+}
+#memo {
+	font-family: sans-serif;
+	text-align: center;
+	font-size: 12px;
+}
+.mobile-buttons {
+	display: none;
+	position: absolute;
+	height: 200px;
+	width: 200px;
+	background-color: #000000;
+	opacity: 0.3;
+	z-index: 999999;
+}
+@media only screen and (max-width: 1000px) {
+	.mobile-buttons {
+		display: block;
+	}
+}
+.mobile-text {
+	position:absolute;
+	font-family: sans-serif;
+	color: #000000;
+	opacity: 1;
+	font-size: 20px;
+	text-align: center;
+	z-index: 1000000;
+}
+p {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
