@@ -71,8 +71,8 @@ ws.onmessage = function(message) {
 			break;
 		case '2':
 			Levels[player.level].walls.forEach(function(wall) {
-				if (wall[5] == data[1]) {
-					wall[6] = data[2];
+				if (wall.id == data[1]) {
+					wall.toggled = data[2];
 				}
 			});
 	}
@@ -137,7 +137,7 @@ let Game = function() {
 	let currLevel = -1;
 	// creates div for given wall 
 	function createWall(wall, color, index) {
-		levelContainer.insertAdjacentHTML('beforeend', `<div id=wall` + index + ` style='position:absolute;background-color: ` + color + `;width: ` + (wall[3]-wall[1]) + `px;height: ` + (wall[4]-wall[2]) + `px;left: ` + wall[1] + `px;top:` + wall[2] + `px;'></div>`);
+		levelContainer.insertAdjacentHTML('beforeend', `<div id=wall` + index + ` style='position:absolute;background-color: ` + color + `;width: ` + (wall.x2-wall.x1) + `px;height: ` + (wall.y2-wall.y1) + `px;left: ` + wall.x1 + `px;top:` + wall.y1 + `px;'></div>`);
 	}
 	function createPlayer(plr) {
 		levelContainer.insertAdjacentHTML('beforeend', `<div id=player` + plr.uid + ` style='position:absolute;background-color: #00FF00;border: 1px solid #000000;width: ` + (plr.w-1) + `px;height: ` + (plr.h-1) + `px;left: ` + plr.x + `px;top:` + plr.y + `px;'></div>`);
@@ -159,7 +159,7 @@ let Game = function() {
 			memo.firstChild.nodeValue = Levels[player.level].memo;
 			// draw walls
 			Levels[player.level].walls.forEach(function(wall, i) {
-				switch (wall[0]) {
+				switch (wall.type) {
 					case 0:
 						createWall(wall, '#000000', i);
 						break;
@@ -172,11 +172,11 @@ let Game = function() {
 						document.getElementById('wall' + i).style.opacity = 0.75;
 						break;
 					case 3:
-						createWall(wall, buttonColors[wall[5]], i)
+						createWall(wall, buttonColors[wall.id], i)
 						break;
 					case 4:
-						createWall(wall, buttonColors[wall[5]], i);
-						document.getElementById('wall' + i).style.opacity = wall[6]==1?0.2:0.75;
+						createWall(wall, buttonColors[wall.id], i);
+						document.getElementById('wall' + i).style.opacity = wall.toggled==1?0.2:0.75;
 						break;
 					case 5:
 						createWall(wall, '#FF9000', 1);
@@ -190,7 +190,7 @@ let Game = function() {
 		// update walls
 		Levels[player.level].walls.forEach(function(wall, i) {
 			// update doors
-			if (wall[0] == 4) document.getElementById('wall'+i).style.opacity = wall[6]==1?0.2:0.75;
+			if (wall.type == 4) document.getElementById('wall'+i).style.opacity = wall.toggled==1?0.2:0.75;
 		});
 		// detect if player left, if so, loop through first 50 player elements and delete ones without player objects
 		if (Levels[player.level].players.length < prevPlayerCount) {

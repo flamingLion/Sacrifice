@@ -60,7 +60,7 @@ Game = function(p) {
 	p.mouseClicked = function() {
 		if (!document.getElementById('wallDelete').checked) return;
 		levelData.walls.forEach(function(wall) {
-			if (p.mouseX > wall[1] && p.mouseY > wall[2] && p.mouseX < wall[3] && p.mouseY < wall[4]) {
+			if (p.mouseX > wall.x1 && p.mouseY > wall.y1 && p.mouseX < wall.x2 && p.mouseY < wall.y2) {
 				undoneWalls.push(wall);
 				levelData.walls.splice(levelData.walls.indexOf(wall), 1);
 			}
@@ -131,34 +131,34 @@ Game = function(p) {
 		p.rectMode(p.CORNERS);
 		// draw level
 		levelData.walls.forEach(function(wall) {
-			switch (wall[0]) {
+			switch (wall.type) {
 				case 0:
 					p.fill(0);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				case 1:
 					p.fill(0, 255, 0, 150);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				case 2:
 					p.fill(255, 0, 0, 150);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				case 3:	
-					p.fill(levelData.buttonColors[wall[5]][0], levelData.buttonColors[wall[5]][1], levelData.buttonColors[wall[5]][2], 255);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.fill(levelData.buttonColors[wall.id][0], levelData.buttonColors[wall.id][1], levelData.buttonColors[wall.id][2], 255);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				case 4:
-					p.fill(levelData.buttonColors[wall[5]][0], levelData.buttonColors[wall[5]][1], levelData.buttonColors[wall[5]][2], levelData.buttonColors[wall[5]][3]);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.fill(levelData.buttonColors[wall.id][0], levelData.buttonColors[wall.id][1], levelData.buttonColors[wall.id][2], levelData.buttonColors[wall.id][3]);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				case 5:
 					p.fill(255, 165, 0, 255);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				case 6:
 					p.fill(50, 50, 50, 255);
-					p.rect(wall[1], wall[2], wall[3], wall[4]);
+					p.rect(wall.x1, wall.y1, wall.x2, wall.y2);
 					break;
 				default:
 					break;

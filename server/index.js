@@ -51,45 +51,27 @@ var Game = {
 			this.xVel = 0;
 			this.yVel = 0;
 		};
-		this.handleSolidCol = function(wall, config) {
-			var specialBehav = {};
-			if (config != undefined) specialBehav = config; 
+		this.handleSimpleCol = function(wall, u, d, l, r) {
 			// if player is above wall
-			if (this.y + this.h <= wall[2]) {
-				if (specialBehav.above != undefined) {
-					specialBehav.above();
-				} else {
-					this.y = wall[2] - this.h;
-					this.yVel = 0;
-					this.canJump = true;
-				}
+			if (this.y + this.h <= wall.y1 && (u==undefined || u==1)) {
+				this.y = wall.y1 - this.h;
+				this.yVel = 0;
+				this.canJump = true;
 			}
 			// if player is below wall
-			if (this.y >= wall[4]) {
-				if (specialBehav.below != undefined) {
-					specialBehav.below();
-				} else {
-					this.y = wall[4];
-					this.yVel = 0;
-				}
+			if (this.y >= wall.y2 && (d==undefined || d==1)) {
+				this.y = wall.y2;
+				this.yVel = 0;
 			}
 			// if player is left of wall
-			if (this.x + this.w <= wall[1]) {
-				if (specialBehav.left != undefined) {
-					specialBehav.left();
-				} else {
-					this.x = wall[1] - this.w;
-					this.xVel = 0;
-				}
+			if (this.x + this.w <= wall.x1 && (l==undefined || l==1)) {
+				this.x = wall.x1 - this.w;
+				this.xVel = 0;
 			}
 			// if player is right of wall
-			if (this.x >= wall[3]) {
-				if (specialBehav.right != undefined) {
-					specialBehav.right();
-				} else {
-					this.x = wall[3];
-					this.xVel = 0;
-				}
+			if (this.x >= wall.x2 && (r==undefined || r==1)) {
+				this.x = wall.x2;
+				this.xVel = 0;
 			}
 		};
 		this.handleVelAndCol = function() {
@@ -144,33 +126,33 @@ var Game = {
 			// detect and handle collisions with walls (all level objects)
 			Game.levels[this.level].walls.forEach(function(wall) {
 				// allow jumping if player is on a wall
-				if (this.x + this.w >= wall[1] && this.x <= wall[3] && this.y + this.h == wall[2]) {
+				if (this.x + this.w >= wall.x1 && this.x <= wall.x2 && this.y + this.h == wall.y1) {
 					this.isOnWall = true;
 					// handle player stepping on a button
-					if (wall[0] == 3 && !this.buttons.includes(wall[5])) {
-						this.buttons.push(wall[5]);
+					if (wall.type == 3 && !this.buttons.includes(wall.id)) {
+						this.buttons.push(wall.id);
 						Game.players.forEach(function(player) {
-							if (player.level == this.level) player.ws.send('2|' + wall[5] + '|1');
+							if (player.level == this.level) player.ws.send('2|' + wall.id + '|1');
 						}, this);
 						Game.levels[this.level].walls.forEach(function(wll) {
-							if (wll[5] == wall[5]) wll[6] = 1;
+							if (wll.id == wall.id && wll.type == 4) wll.toggled = 1;
 						});
 					}
 				// handle when player steps off a button
-				} else if (this.buttons.includes(wall[5]) && wall[0] == 3) {
-					this.buttons.splice(this.buttons.indexOf(wall[5]), 1);
+				} else if (this.buttons.includes(wall.id) && wall.type == 3) {
+					this.buttons.splice(this.buttons.indexOf(wall.id), 1);
 					Game.players.forEach(function(player) {
-						if (player.level == this.level) player.ws.send('2|' + wall[5] + '|0');
+						if (player.level == this.level) player.ws.send('2|' + wall.id + '|0');
 					}, this);
 					Game.levels[this.level].walls.forEach(function(wll) {
-						if (wll[5] == wall[5]) wll[6] = 0;
+						if (wll.id == wall.id && wll.type == 4) wll.toggled = 0;
 					});
 				}
 				// if player is in a wall on the next frame
-				if (this.x + this.xVel < wall[3] && this.x + this.xVel + this.w > wall[1] && this.y + this.yVel + this.h > wall[2] && this.y + this.yVel < wall[4]) {
-					switch (wall[0]) {
+				if (this.x + this.xVel < wall.x2 && this.x + this.xVel + this.w > wall.x1 && this.y + this.yVel + this.h > wall.y1 && this.y + this.yVel < wall.y2) {
+					switch (wall.type) {
 						case 0: 
-							this.handleSolidCol(wall);
+							this.handleSimpleCol(wall);
 							break;
 						case 1:
 							this.level++;
@@ -180,44 +162,44 @@ var Game = {
 							this.respawn();
 							break;
 						case 3:
-							this.handleSolidCol(wall);
+							this.handleSimpleCol(wall);
 							break;
 						case 4:
-							if (wall[6]) break;
-							this.handleSolidCol(wall);
+							if (wall.toggled) break;
+							this.handleSimpleCol(wall);
 							break;
 						case 5:
-							this.handleSolidCol(wall, {above: function() {
-								this.y = wall[2] - this.h;
+							this.handleSimpleCol(wall, 0);
+							// if player is above
+							if (this.y + this.h <= wall.y1) {
+								this.y = wall.y1 - this.h;
 								this.yVel *= -0.8;
 								if (Math.abs(this.yVel) < 5) {
 									this.canJump = true;
 									this.isOnWall = true;
 								}
-							}});
+							}
 							break;
 						case 6:
-							this.handleSolidCol(wall, {left: function() {
-								this.x = wall[1] - this.w;
+							this.handleSimpleCol(wall, 1, 1, 0, 0);
+							// if player is left or right of wall
+							if (this.x + this.w <= wall.x1) {
+								this.x = wall.x1 - this.w;
 								this.xVel = 0;
 								if (Math.abs(this.yVel) < this.jumpHeight) this.canJump = true;
 								this.isOnWall = true;
-							}, right: function(){
-								this.x = wall[3];
+							}
+							if (this.x >= wall.x2) {
+								this.x = wall.x2;
 								this.xVel = 0;
 								if (Math.abs(this.yVel) < this.jumpHeight) this.canJump = true;
 								this.isOnWall = true;
-							}});
+							}
 							break;
 					}
 				}
 			}, this);
 			if (!this.isOnWall) this.canJump = false;
-/*			this.buttons.forEach(function(buttonId) {
-				Game.levels[this.level].walls.forEach(function(wall) {
-					if (wall[5] == buttonId && wall[0] == 4) wall[6] == 1;
-				});
-			}, this);*/
 			// move player relative to velocity
 			this.x+=this.xVel;
 			this.y+=this.yVel;
