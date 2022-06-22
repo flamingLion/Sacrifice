@@ -1,2 +1,2 @@
-git commit -a
+git commit -am "regular backup"
 git push

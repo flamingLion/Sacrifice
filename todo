@@ -1,3 +1,4 @@
+change level files to store walls as objects
 make client use button colors from level file
 change editor to set button colors in hexadecimal
 make levels
