@@ -243,28 +243,28 @@ var Game = {
 							posOffset,
 							playersOnWall = [];
 						Game.players.forEach(player => {
-							if (player.level == index) {
-								player.ws.send('1|' + wall.uid + '|
 							if (player.level == index && player.x + player.w >= wall.x1 && player.x <= wall.x2 && player.y + player.h == wall.y1) {
 								playersOnWall.push(player.uid);
 							}
 						});
 						if (wall.frameNum < 24) {
 							wall.frameNum++;
-							wall.x1 = wall.posList[wall.posNum].x1 + Math.abs(wall.posList[wall.posNum].x1 - nextPos.x1);
-							wall.y1 = wall.posList[wall.posNum].y1 + Math.abs(wall.posList[wall.posNum].y1 - nextPos.y1);
-							wall.x2 = wall.posList[wall.posNum].x2 + Math.abs(wall.posList[wall.posNum].x2 - nextPos.x2);
-							wall.y2 = wall.posList[wall.posNum].y2 + Math.abs(wall.posList[wall.posNum].y2 - nextPos.y2);
+							wall.x1 = wall.posList[wall.posNum].x1 + ((wall.posList[wall.posNum].x1 - nextPos.x1)/24*wall.frameNum);
+							wall.y1 = wall.posList[wall.posNum].y1 + ((wall.posList[wall.posNum].y1 - nextPos.y1)/24*wall.frameNum);
+							wall.x2 = wall.posList[wall.posNum].x2 + ((wall.posList[wall.posNum].x2 - nextPos.x2)/24*wall.frameNum);
+							wall.y2 = wall.posList[wall.posNum].y2 + ((wall.posList[wall.posNum].y2 - nextPos.y2)/24*wall.frameNum);
 						} else {
 							wall.frameNum = 0;
 							wall.posNum = (nextPos==wall.posList[0])?0:wall.posNum+1;
 						}
 						posOffset = {x1: wall.x1 - currPos.x1, y1: wall.y1 - currPos.y1};
 						playersOnWall.forEach(uid => {
-							if (Game.players.find(player => {return player.uid == uid})) {
-								player.x1 += posOffset.x1;
-								player.y1 += posOffset.y1;
-							}
+							Game.players.forEach(player => {
+								if (Game.players.find(player => {return player.uid == uid})) {
+									player.x += posOffset.x1;
+									player.y += posOffset.y1;
+								}
+							});
 						});
 						Game.players.forEach(player => {
 							if (player.level == index) {
