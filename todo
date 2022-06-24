@@ -11,3 +11,5 @@ make sprites?
 fix fall state thing on line 108
 fix sticky corners bug
 add ability to drop a rope for other players?
+add controllable jump height based on how long you press up
+fix player colors & z-indexes being the same

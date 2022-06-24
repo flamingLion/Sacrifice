@@ -21,11 +21,17 @@ let Levels,
 
 // get levels and start game
 let xhttp = new XMLHttpRequest();
+xhttp.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
 xhttp.open('GET', 'levels.json', true);
 xhttp.onreadystatechange = function() {
 	if (xhttp.readyState == 4) {
 		Levels = JSON.parse(xhttp.response).Levels;
-		console.log('Received levels, starting game...');
+		Levels.forEach(level => {
+			level.walls.forEach(wall => {
+				if (wall.type == 8) wall.prevPos = {x1: wall.x1, y1: wall.y1, x2: wall.x2, y2: wall.y2};
+			});
+		});
+		console.log('Initialized levels, starting game...');
 		Game();
 	}
 };
@@ -189,6 +195,9 @@ let Game = function() {
 					case 7:
 						createWall(wall, '#000000', i);
 						break;
+					case 8:
+						createWall(wall, '#000000', i);
+						break;
 				}
 			});
 		}
@@ -201,6 +210,14 @@ let Game = function() {
 					break;
 				case 7:
 					document.getElementById('wall'+i).style.opacity = wall.toggled==1?0.2:1;
+					break;
+				case 8:
+					if (wall.prevPos.x1 != wall.x1 || wall.prevPos.y1 != wall.y1 || wall.prevPos.x2 != wall.x2 || wall.prevPos.y2 != wall.y2) {
+						document.getElementById('wall'+i).style.left = wall.x1;
+						document.getElementById('wall'+i).style.top = wall.y1;
+						document.getElementById('wall'+i).style.width = wall.x2 - wall.y2;
+						document.getElementById('wall'+i).style.height = wall.y2 - wall.y1;
+					}
 					break;
 			}
 		});

@@ -9,7 +9,7 @@
 TODO: located at ../todo
 
 Levels.json legend:
-{type, x1, y1, x2, y2, id, toggled, timer, timerStart, uid}
+{type, x1, y1, x2, y2, id, toggled, timer, timerStart, timerOffset, uid, posList, posNum, frameNum}
 0: wall
 1: win
 2: death
@@ -17,7 +17,8 @@ Levels.json legend:
 4: controlled wall (req: id, toggled)
 5: bounce pad
 6: climbable platform
-7: timed platforms (req: timer, timerStart, uid, toggled)
+7: timed platform (req: timer, timerStart, timerOffset, uid, toggled)
+8: moving platform (req: posList, posNum, frameNum, uid)
 \*					     */
 
 const WebSocket = require('ws');
@@ -201,6 +202,9 @@ var Game = {
 							if (wall.toggled) break;
 							this.handleSimpleCol(wall);
 							break;
+						case 8:
+							this.handleSimpleCol(wall);
+							break;
 					}
 				}
 			}, this);
@@ -227,12 +231,50 @@ var Game = {
 							Game.players.forEach(player => {
 								if (player.level == index) player.ws.send('1|' + wall.uid + '|toggled|' + wall.toggled);
 							});
+						} else if (wall.timerOffset > 0) {
+							wall.timerOffset--;
 						} else {
 							wall.timer--;
 						}
 						break;
 					case 8:
-						
+						let currPos = {x1: wall.x1, y1: wall.y1},
+							nextPos = (wall.posList[wall.posNum+1]==undefined)?wall.posList[0]:wall.posList[wall.posNum+1],
+							posOffset,
+							playersOnWall = [];
+						Game.players.forEach(player => {
+							if (player.level == index) {
+								player.ws.send('1|' + wall.uid + '|
+							if (player.level == index && player.x + player.w >= wall.x1 && player.x <= wall.x2 && player.y + player.h == wall.y1) {
+								playersOnWall.push(player.uid);
+							}
+						});
+						if (wall.frameNum < 24) {
+							wall.frameNum++;
+							wall.x1 = wall.posList[wall.posNum].x1 + Math.abs(wall.posList[wall.posNum].x1 - nextPos.x1);
+							wall.y1 = wall.posList[wall.posNum].y1 + Math.abs(wall.posList[wall.posNum].y1 - nextPos.y1);
+							wall.x2 = wall.posList[wall.posNum].x2 + Math.abs(wall.posList[wall.posNum].x2 - nextPos.x2);
+							wall.y2 = wall.posList[wall.posNum].y2 + Math.abs(wall.posList[wall.posNum].y2 - nextPos.y2);
+						} else {
+							wall.frameNum = 0;
+							wall.posNum = (nextPos==wall.posList[0])?0:wall.posNum+1;
+						}
+						posOffset = {x1: wall.x1 - currPos.x1, y1: wall.y1 - currPos.y1};
+						playersOnWall.forEach(uid => {
+							if (Game.players.find(player => {return player.uid == uid})) {
+								player.x1 += posOffset.x1;
+								player.y1 += posOffset.y1;
+							}
+						});
+						Game.players.forEach(player => {
+							if (player.level == index) {
+								player.ws.send('1|' + wall.uid + '|x1|' + wall.x1);
+								player.ws.send('1|' + wall.uid + '|y1|' + wall.y1);
+								player.ws.send('1|' + wall.uid + '|x2|' + wall.x2);
+								player.ws.send('1|' + wall.uid + '|y2|' + wall.y2);
+							}
+						});
+						break;
 				}
 			});
 		});
