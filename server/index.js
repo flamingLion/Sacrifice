@@ -9,15 +9,15 @@
 TODO: located at ../todo
 
 Levels.json legend:
-{type, x1, y1, x2, y2, id, toggled, timer, timerStart}
+{type, x1, y1, x2, y2, id, toggled, timer, timerStart, uid}
 0: wall
 1: win
 2: death
-3: button
-4: controlled wall (door)
+3: button (req: id)
+4: controlled wall (req: id, toggled)
 5: bounce pad
 6: climbable platform
-7: timed platforms
+7: timed platforms (req: timer, timerStart, uid, toggled)
 \*					     */
 
 const WebSocket = require('ws');
@@ -224,6 +224,9 @@ var Game = {
 						if (wall.timer <= 0) {
 							wall.toggled = wall.toggled?0:1;
 							wall.timer = wall.timerStart;
+							Game.players.forEach(player => {
+								if (player.level == index) player.ws.send('1|' + wall.uid + '|toggled|' + wall.toggled);
+							});
 						} else {
 							wall.timer--;
 						}

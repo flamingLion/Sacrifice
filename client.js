@@ -67,7 +67,9 @@ ws.onmessage = function(message) {
 			Levels[player.level].players = players;
 			break;
 		case '1':
-			Levels[player.level].walls[data[1]][data[2]] = data[3];
+			Levels[player.level].walls.forEach(wall=>{
+				if (wall.uid == data[1]) wall[data[2]] = parseInt(data[3]);
+			});
 			break;
 		case '2':
 			Levels[player.level].walls.forEach(function(wall) {
@@ -179,10 +181,13 @@ let Game = function() {
 						document.getElementById('wall' + i).style.opacity = wall.toggled==1?0.2:0.75;
 						break;
 					case 5:
-						createWall(wall, '#FF9000', 1);
+						createWall(wall, '#FF9000', i);
 						break;
 					case 6:
 						createWall(wall, '#303030', i);
+						break;
+					case 7:
+						createWall(wall, '#000000', i);
 						break;
 				}
 			});
@@ -190,7 +195,14 @@ let Game = function() {
 		// update walls
 		Levels[player.level].walls.forEach(function(wall, i) {
 			// update doors
-			if (wall.type == 4) document.getElementById('wall'+i).style.opacity = wall.toggled==1?0.2:0.75;
+			switch (wall.type) {
+				case 4:
+					document.getElementById('wall'+i).style.opacity = wall.toggled==1?0.2:0.75;
+					break;
+				case 7:
+					document.getElementById('wall'+i).style.opacity = wall.toggled==1?0.2:1;
+					break;
+			}
 		});
 		// detect if player left, if so, loop through first 50 player elements and delete ones without player objects
 		if (Levels[player.level].players.length < prevPlayerCount) {
