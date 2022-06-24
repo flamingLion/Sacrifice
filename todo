@@ -1,4 +1,3 @@
-change level files to store walls as objects
 make client use button colors from level file
 change editor to set button colors in hexadecimal
 make levels
@@ -11,3 +10,4 @@ make new block types:
 make sprites?
 fix fall state thing on line 108
 fix sticky corners bug
+add ability to drop a rope for other players?

@@ -6,10 +6,10 @@
 ╚═╝╚══╝╚═╝╚╝─╚╝╚╝─╚╝╚═╝╚═╝
 			*/
 /*					     *\
-TODO: located at todo.list
+TODO: located at ../todo
 
 Levels.json legend:
-[type, x1, y1, x2, y2, individual id, toggled]
+{type, x1, y1, x2, y2, id, toggled, timer, timerStart}
 0: wall
 1: win
 2: death
@@ -17,6 +17,7 @@ Levels.json legend:
 4: controlled wall (door)
 5: bounce pad
 6: climbable platform
+7: timed platforms
 \*					     */
 
 const WebSocket = require('ws');
@@ -196,6 +197,10 @@ var Game = {
 								this.isOnWall = true;
 							}
 							break;
+						case 7:
+							if (wall.toggled) break;
+							this.handleSimpleCol(wall);
+							break;
 					}
 				}
 			}, this);
@@ -207,6 +212,27 @@ var Game = {
 	},
 	// game loops at 24 fps
 	gameLoop: setInterval(function() {
+		Game.levels.forEach((level, index) => {
+			let playerInLevel = false;
+			for (let i = 0;i < Game.players.length;i++) {
+				if (Game.players[i].level == index) playerInLevel = true;
+			}
+			if (!playerInLevel) return;
+			level.walls.forEach(wall => {
+				switch (wall.type) {
+					case 7:
+						if (wall.timer <= 0) {
+							wall.toggled = wall.toggled?0:1;
+							wall.timer = wall.timerStart;
+						} else {
+							wall.timer--;
+						}
+						break;
+					case 8:
+						
+				}
+			});
+		});
 		Game.players.forEach(function(player) {
 			// handle collisions and movement (velocity)
 			player.handleVelAndCol();
@@ -262,9 +288,9 @@ wss.on('connection', function(ws) {
 	ws.id = player.uid;
 	console.log('Player ' + player.uid + ' joined');
 	ws.on('message', function(message) {
-		var data = message.split('');
 		// detect irregular (potentially dangerous) requests and close client if any are found
-		var poisoned = false;
+		var poisoned = false,
+			data = message.split('');
 		if (message.length != 4) poisoned = true;
 		data.forEach(function(num) {
 			if (num != 0 && num != 1) poisoned = true;
