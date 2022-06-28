@@ -108,6 +108,7 @@ var Game = {
 						if (this.inputs[0] == 1 && player.inputs[1] == 1 && this.canJump && this.inputs[1] == 0) {
 							this.yVel -= 15;
 							this.canJump = false;
+							this.state = 'jump';
 						}
 					}
 				}, this);
@@ -216,6 +217,7 @@ var Game = {
 	},
 	// game loops at 24 fps
 	gameLoop: setInterval(function() {
+		// if player is in a level, update walls that need to be updated
 		Game.levels.forEach((level, index) => {
 			let playerInLevel = false;
 			for (let i = 0;i < Game.players.length;i++) {
@@ -248,11 +250,11 @@ var Game = {
 							}
 						});
 						if (wall.frameNum < 24) {
+							wall.x1 = wall.posList[wall.posNum].x1 + ((nextPos.x1 - wall.posList[wall.posNum].x1)/24*wall.frameNum);
+							wall.y1 = wall.posList[wall.posNum].y1 + ((nextPos.y1 - wall.posList[wall.posNum].y1)/24*wall.frameNum);
+							wall.x2 = wall.posList[wall.posNum].x2 + ((nextPos.x2 - wall.posList[wall.posNum].x2)/24*wall.frameNum);
+							wall.y2 = wall.posList[wall.posNum].y2 + ((nextPos.y2 - wall.posList[wall.posNum].y2)/24*wall.frameNum);
 							wall.frameNum++;
-							wall.x1 = wall.posList[wall.posNum].x1 + ((wall.posList[wall.posNum].x1 - nextPos.x1)/24*wall.frameNum);
-							wall.y1 = wall.posList[wall.posNum].y1 + ((wall.posList[wall.posNum].y1 - nextPos.y1)/24*wall.frameNum);
-							wall.x2 = wall.posList[wall.posNum].x2 + ((wall.posList[wall.posNum].x2 - nextPos.x2)/24*wall.frameNum);
-							wall.y2 = wall.posList[wall.posNum].y2 + ((wall.posList[wall.posNum].y2 - nextPos.y2)/24*wall.frameNum);
 						} else {
 							wall.frameNum = 0;
 							wall.posNum = (nextPos==wall.posList[0])?0:wall.posNum+1;
