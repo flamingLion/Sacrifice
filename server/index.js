@@ -309,7 +309,16 @@ var Game = {
 		Game.players[plr].xVel += (xVel==undefined)?Math.floor(Math.random()*100)-50:xVel;
 		Game.players[plr].yVel += (yVel==undefined)?Math.floor(Math.random()*-50):yVel;
 		console.log(Game.players[plr].xVel + ' ' + Game.players[plr].yVel);
-	}
+	},
+	kick: function(uid, message) {
+		let player = Game.players.find(function(plr) {return plr.uid == uid});
+		if (player.ws != undefined) {
+			player.ws.close();
+			console.log(message);
+		} else {
+			console.log('Attempted to kick player ' + uid + ', but player doesnt exist');
+		}
+	}	
 };
 
 const wss = new WebSocket.Server({
@@ -336,20 +345,14 @@ wss.on('connection', function(ws) {
 	console.log('Player ' + player.uid + ' joined');
 	ws.on('message', function(message) {
 		// detect irregular (potentially dangerous) requests and close client if any are found
-		var poisoned = false,
-			data = message.split('');
-		if (message.length != 4) poisoned = true;
+		if (message.length != 4) Game.kick(player.uid, 'Player ' + player.uid + ' kicked for suspicious activity: ' + message.slice(0, 100));
+		let data = message.split('');
 		data.forEach(function(num) {
-			if (num != 0 && num != 1) poisoned = true;
+			if (num != 0 && num != 1) Game.kick(player.uid, 'Player ' + player.uid + ' kicked for suspicious activity: ' + message.slice(0, 100));
 		});
-		if (poisoned) {
-			console.log('Player ' + player.uid + ' kicked for suspicious activity: ' + message);
-			ws.close();
-		} else {
-			for (i=0;i<player.inputs.length;i++) {
-				if (data[i] == 0 || data[i] == 1) {
-					player.inputs[i] = data[i];
-				}
+		for (i=0;i<player.inputs.length;i++) {
+			if (data[i] == 0 || data[i] == 1) {
+				player.inputs[i] = data[i];
 			}
 		}
 	});

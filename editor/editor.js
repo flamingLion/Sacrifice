@@ -52,7 +52,7 @@ levelData = {
 undoneWalls = [],
 wallCount = 0,
 Game = function(p) {
-	let currWall = [],
+	let currWall = {},
 		temp = 0;
 	p.setup = function() {
 		p.createCanvas(800, 600);
@@ -68,40 +68,60 @@ Game = function(p) {
 	};
 	p.mousePressed = function() {
 		if (p.mouseX < 0 || p.mouseY > p.width || p.mouseY < 0 || p.mouseY > p.height || document.getElementById('wallDelete').checked) return;
-		if (document.getElementById('wallType').value == '') alert('You need to specify a type. Ask the developer for a list  of valid types');
-		if (!levelData.buttonColors[parseInt(document.getElementById('wallId').value)] && document.getElementById('wallType').value == 3 || document.getElementById('wallType').value == 4) {
-			alert('Color for button ID not defined');
-			return;
-		}
-		currWall.push(parseInt(document.getElementById('wallType').value));
-		currWall.push(document.getElementById('wallGrid').checked?Math.floor(p.mouseX/20)*20:Math.floor(p.mouseX));
-		currWall.push(document.getElementById('wallGrid').checked?Math.floor(p.mouseY/20)*20:Math.floor(p.mouseY));
-//		if (
+		if (document.getElementById('wallType').value == '') return alert('You need to specify a type. Ask the developer for a list  of valid types');
+		if (!levelData.buttonColors[parseInt(document.getElementById('wallId').value)] && document.getElementById('wallType').value == 3 || document.getElementById('wallType').value == 4) return alert('Color for button ID not defined');
+		currWall.type = parseInt(document.getElementById('wallType').value);
+		currWall.x1 = document.getElementById('wallGrid').checked?Math.floor(p.mouseX/20)*20:Math.floor(p.mouseX);
+		currWall.y1 = document.getElementById('wallGrid').checked?Math.floor(p.mouseY/20)*20:Math.floor(p.mouseY);
 	};
 	p.mouseReleased = function() {
-		if (p.mouseX < 0 || p.mouseY > p.width || p.mouseY < 0 || p.mouseY > p.height || currWall == [] || document.getElementById('wallDelete').checked) return;
-		currWall.push(document.getElementById('wallGrid').checked?Math.floor(p.mouseX/20)*20+20:Math.floor(p.mouseX));
-		currWall.push(document.getElementById('wallGrid').checked?Math.floor(p.mouseY/20)*20+20:Math.floor(p.mouseY));
-		if (document.getElementById('wallId').value != '') {
-			currWall.push(parseInt(document.getElementById('wallId').value));
-			currWall.push(0);
+		if (p.mouseX < 0 || p.mouseY > p.width || p.mouseY < 0 || p.mouseY > p.height || currWall == {} || document.getElementById('wallDelete').checked) return;
+		currWall.x2 = document.getElementById('wallGrid').checked?Math.floor(p.mouseX/20)*20+20:Math.floor(p.mouseX);
+		currWall.y2 = document.getElementById('wallGrid').checked?Math.floor(p.mouseY/20)*20+20:Math.floor(p.mouseY);
+		// add specific wall properties
+/*
+7: timed platform (req: timer, timerStart, timerOffset, uid, toggled)
+8: moving platform (req: posList, posNum, frameNum, uid
+*/
+		switch (currWall.type) {
+			case 3:
+				if (document.
+			case 4:
+				if (document.getElementById('wallId').value != '') {
+					currWall.id = parseInt(document.getElementById('wallId').value);
+					currWall.toggled = 0;
+				}
+				break;
+			case 7:
+				let uid = 0;
+				levelData.walls.forEach(wall => {
+					if (wall.uid == uid) return uid++;
+				});
+				currWall.uid = uid;
+				break;
+			case 8:
+				let uid = 0;
+				levelData.walls.forEach(wall => {
+					if (wall.uid == uid) return uid++;
+				});
+				break;
 		}
 		// if second coordinate is lower than first coordinate, flip them (so the collisions dont break)
-		if (currWall[2] >= currWall[4]) {
-			temp = currWall[2];
-			currWall[2] = currWall[4] - (document.getElementById('wallGrid').checked?20:0);
-			currWall[4] = temp + (document.getElementById('wallGrid').checked?20:0);
+		if (currWall.y1 >= currWall.y2) {
+			temp = currWall.y1;
+			currWall.y1 = currWall.y2 - (document.getElementById('wallGrid').checked?20:0);
+			currWall.y2 = temp + (document.getElementById('wallGrid').checked?20:0);
 			temp = 0;
 		}
 		// same thing but making sure first coord is to the left of second coord
-		if (currWall[1] >= currWall[3]) {
-			temp = currWall[1];
-			currWall[1] = currWall[3] - (document.getElementById('wallGrid').checked?20:0);
-			currWall[3] = temp + (document.getElementById('wallGrid').checked?20:0);
+		if (currWall.x1 >= currWall.x2) {
+			temp = currWall.x1;
+			currWall.x1 = currWall.x2 - (document.getElementById('wallGrid').checked?20:0);
+			currWall.x2 = temp + (document.getElementById('wallGrid').checked?20:0);
 			temp = 0;
 		}
 		levelData.walls.push(currWall);
-		currWall = [];
+		currWall = {};
 	};
 	p.keyPressed = function() {
 		if(p.keyCode == 90 && levelData.walls[levelData.walls.length-1]) {
