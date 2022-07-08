@@ -237,89 +237,88 @@ var Game = {
 				}
 			});
 		});
-	},
-	// game loops at 24 fps
-	gameLoop: setInterval(function() {
-		// if player is in a level, update walls that need to be updated
-		Game.levels.forEach((level, index) => {
-			let playerInLevel = false;
-			for (let i = 0;i < Game.players.length;i++) {
-				if (Game.players[i].level == index) playerInLevel = true;
-			}
-			if (!playerInLevel) return;
-			level.walls.forEach(wall => {
-				switch (wall.type) {
-					case 7:
-						if (wall.timer <= 0) {
-							wall.toggled = wall.toggled?0:1;
-							wall.timer = wall.timerStart;
-							Game.players.forEach(player => {
-								if (player.level == index) player.ws.send('1|' + wall.uid + '|toggled|' + wall.toggled);
-							});
-						} else if (wall.timerOffset > 0) {
-							wall.timerOffset--;
-						} else {
-							wall.timer--;
-						}
-						break;
-					case 8:
-						let currPos = {x1: wall.x1, y1: wall.y1},
-							nextPos = (wall.posList[wall.posNum+1]==undefined)?wall.posList[0]:wall.posList[wall.posNum+1],
-							posOffset,
-							playersOnWall = [];
-						Game.players.forEach(player => {
-							if (player.level == index && player.x + player.w >= wall.x1 && player.x <= wall.x2 && player.y + player.h == wall.y1) {
-								playersOnWall.push(player.uid);
+		// game loops at 24 fps
+		Game.gameLoop = setInterval(function() {
+			// if player is in a level, update walls that need to be updated
+			Game.levels.forEach((level, index) => {
+				let playerInLevel = false;
+				for (let i = 0;i < Game.players.length;i++) {
+					if (Game.players[i].level == index) playerInLevel = true;
+				}
+				if (!playerInLevel) return;
+				level.walls.forEach(wall => {
+					switch (wall.type) {
+						case 7:
+							if (wall.timer <= 0) {
+								wall.toggled = wall.toggled?0:1;
+								wall.timer = wall.timerStart;
+								Game.players.forEach(player => {
+									if (player.level == index) player.ws.send('1|' + wall.uid + '|toggled|' + wall.toggled);
+								});
+							} else if (wall.timerOffset > 0) {
+								wall.timerOffset--;
+							} else {
+								wall.timer--;
 							}
-						});
-						if (wall.frameNum < 24) {
-							wall.x1 = wall.posList[wall.posNum].frameList[wall.frameNum].x1;
-							wall.y1 = wall.posList[wall.posNum].frameList[wall.frameNum].y1;
-							wall.x2 = wall.posList[wall.posNum].frameList[wall.frameNum].x2;
-							wall.y2 = wall.posList[wall.posNum].frameList[wall.frameNum].y2;
-							wall.frameNum++;
-						} else {
-							wall.frameNum = 0;
-							wall.posNum = (nextPos==wall.posList[0])?0:wall.posNum+1;
-						}
-						posOffset = {x1: wall.x1 - currPos.x1, y1: wall.y1 - currPos.y1};
-						playersOnWall.forEach(uid => {
+							break;
+						case 8:
+							let currPos = {x1: wall.x1, y1: wall.y1},
+								nextPos = (wall.posList[wall.posNum+1]==undefined)?wall.posList[0]:wall.posList[wall.posNum+1],
+								posOffset,
+								playersOnWall = [];
 							Game.players.forEach(player => {
-								if (Game.players.find(player => {return player.uid == uid})) {
-									player.x += posOffset.x1;
-									player.y += posOffset.y1;
+								if (player.level == index && player.x + player.w >= wall.x1 && player.x <= wall.x2 && player.y + player.h == wall.y1) {
+									playersOnWall.push(player.uid);
 								}
 							});
-						});
-						Game.players.forEach(player => {
-							if (player.level == index) {
-								player.ws.send('1|' + wall.uid + '|x1|' + wall.x1);
-								player.ws.send('1|' + wall.uid + '|y1|' + wall.y1);
-								player.ws.send('1|' + wall.uid + '|x2|' + wall.x2);
-								player.ws.send('1|' + wall.uid + '|y2|' + wall.y2);
+							if (wall.frameNum < 24) {
+								wall.x1 = wall.posList[wall.posNum].frameList[wall.frameNum].x1;
+								wall.y1 = wall.posList[wall.posNum].frameList[wall.frameNum].y1;
+								wall.x2 = wall.posList[wall.posNum].frameList[wall.frameNum].x2;
+								wall.y2 = wall.posList[wall.posNum].frameList[wall.frameNum].y2;
+								wall.frameNum++;
+							} else {
+								wall.frameNum = 0;
+								wall.posNum = (nextPos==wall.posList[0])?0:wall.posNum+1;
 							}
-						});
-						break;
+							posOffset = {x1: wall.x1 - currPos.x1, y1: wall.y1 - currPos.y1};
+							playersOnWall.forEach(uid => {
+								Game.players.forEach(player => {
+									if (Game.players.find(player => {return player.uid == uid})) {
+										player.x += posOffset.x1;
+										player.y += posOffset.y1;
+									}
+								});
+							});
+							Game.players.forEach(player => {
+								if (player.level == index) {
+									player.ws.send('1|' + wall.uid + '|x1|' + wall.x1);
+									player.ws.send('1|' + wall.uid + '|y1|' + wall.y1);
+									player.ws.send('1|' + wall.uid + '|x2|' + wall.x2);
+									player.ws.send('1|' + wall.uid + '|y2|' + wall.y2);
+								}
+							});
+							break;
+					}
+				});
+			});
+			Game.players.forEach(function(player) {
+				// handle collisions and movement (velocity)
+				player.handleVelAndCol();
+				// send data about player position and current level
+				var data = '0|' + player.level + '|' + player.uid + '|' + player.name + '|' + player.state + '|' + player.w + '|' + player.h + '|' + player.x + '|' + player.y;
+				Game.players.forEach(function(plr) {
+					if (plr.level == player.level && plr != player) {
+						data+='|' + plr.uid + '|' + plr.name + '|' + plr.state + '|' + plr.w + '|' + plr.h + '|' + plr.x + '|' + plr.y;
+					}
+				});
+				if (player.lastSent != data) {
+					player.ws.send(data);
+					player.lastSent = data;
 				}
 			});
-		});
-		Game.players.forEach(function(player) {
-			// handle collisions and movement (velocity)
-			player.handleVelAndCol();
-	
-			// send data about player position and current level
-			var data = '0|' + player.level + '|' + player.uid + '|' + player.name + '|' + player.state + '|' + player.w + '|' + player.h + '|' + player.x + '|' + player.y;
-			Game.players.forEach(function(plr) {
-				if (plr.level == player.level && plr != player) {
-					data+='|' + plr.uid + '|' + plr.name + '|' + plr.state + '|' + plr.w + '|' + plr.h + '|' + plr.x + '|' + plr.y;
-				}
-			});
-			if (player.lastSent != data) {
-				player.ws.send(data);
-				player.lastSent = data;
-			}
-		});
-	}, (1000/24)),
+		}, (1000/24));
+	},
 	// returns smallest availible UID
 	genUID: function() {
 		var uid = 0;
@@ -347,7 +346,8 @@ var Game = {
 const wss = new WebSocket.Server({
 	port: 25565
 }, function() {
-	console.log('Running websocket server');
+	console.log('Websocket server running, starting game');
+	Game.start();
 });
 
 wss.on('connection', function(ws) {
