@@ -24,7 +24,7 @@ Levels.json legend:
 const WebSocket = require('ws');
 
 var Game = {
-	levels: require('../levels.json').Levels,
+	levels: [],
 	players: [],
 	Player: function(config) {
 		this.name = config.name || 'Unknown';
@@ -215,6 +215,29 @@ var Game = {
 			this.y+=this.yVel;
 		};
 	},
+	// initialize levels and start game loop
+	start: function() {
+		Game.levels = require('../levels.json').Levels;
+		Game.levels.forEach(level => {
+			level.walls.forEach(wall => {
+				switch (wall.type) {
+					case 8:
+						wall.posList.forEach((pos, index) => {
+							pos.frameList = [];
+							let nextPos = (wall.posList[index+1]==undefined)?wall.posList[0]:wall.posList[index+1];
+							for (let i = 0;i < 24;i++) {
+								pos.frameList.push({});
+								pos.frameList[i].x1 = pos.x1 + ((nextPos.x1 - pos.x1)/24*i);
+								pos.frameList[i].y1 = pos.y1 + ((nextPos.y1 - pos.y1)/24*i);
+								pos.frameList[i].x2 = pos.x2 + ((nextPos.x2 - pos.x2)/24*i);
+								pos.frameList[i].y2 = pos.y2 + ((nextPos.y2 - pos.y2)/24*i);
+							}
+						});
+						break;
+				}
+			});
+		});
+	},
 	// game loops at 24 fps
 	gameLoop: setInterval(function() {
 		// if player is in a level, update walls that need to be updated
@@ -250,10 +273,10 @@ var Game = {
 							}
 						});
 						if (wall.frameNum < 24) {
-							wall.x1 = wall.posList[wall.posNum].x1 + ((nextPos.x1 - wall.posList[wall.posNum].x1)/24*wall.frameNum);
-							wall.y1 = wall.posList[wall.posNum].y1 + ((nextPos.y1 - wall.posList[wall.posNum].y1)/24*wall.frameNum);
-							wall.x2 = wall.posList[wall.posNum].x2 + ((nextPos.x2 - wall.posList[wall.posNum].x2)/24*wall.frameNum);
-							wall.y2 = wall.posList[wall.posNum].y2 + ((nextPos.y2 - wall.posList[wall.posNum].y2)/24*wall.frameNum);
+							wall.x1 = wall.posList[wall.posNum].frameList[wall.frameNum].x1;
+							wall.y1 = wall.posList[wall.posNum].frameList[wall.frameNum].y1;
+							wall.x2 = wall.posList[wall.posNum].frameList[wall.frameNum].x2;
+							wall.y2 = wall.posList[wall.posNum].frameList[wall.frameNum].y2;
 							wall.frameNum++;
 						} else {
 							wall.frameNum = 0;
