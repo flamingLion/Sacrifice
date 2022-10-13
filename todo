@@ -19,3 +19,4 @@ add controllable jump height based on how long you press up
 fix player colors & z-indexes being the same
 change moving platforms to generate frame positions during initialization?
 use closure compiler on client.js
+make server create Game.loopableWalls[] on init

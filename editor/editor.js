@@ -84,8 +84,8 @@ Game = function(p) {
 8: moving platform (req: posList, posNum, frameNum, uid
 */
 		switch (currWall.type) {
-			case 3:
-				if (document.
+//			case 3:
+//				if (document.
 			case 4:
 				if (document.getElementById('wallId').value != '') {
 					currWall.id = parseInt(document.getElementById('wallId').value);
@@ -93,14 +93,14 @@ Game = function(p) {
 				}
 				break;
 			case 7:
-				let uid = 0;
+				var uid = 0;
 				levelData.walls.forEach(wall => {
 					if (wall.uid == uid) return uid++;
 				});
 				currWall.uid = uid;
 				break;
 			case 8:
-				let uid = 0;
+				var uid = 0;
 				levelData.walls.forEach(wall => {
 					if (wall.uid == uid) return uid++;
 				});
